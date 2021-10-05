@@ -45,6 +45,7 @@
 #import <Foundation/NSUserDefaults.h>
 
 #import "AppKit/NSApplication.h"
+#import "AppKit/NSBezierPath.h"
 #import "AppKit/NSColor.h"
 #import "AppKit/NSCursor.h"
 #import "AppKit/NSEvent.h"
@@ -60,6 +61,7 @@ static NSNotificationCenter *nc = nil;
 
 + (void) initialize
 {
+  [self setVersion: 1];
   nc = [NSNotificationCenter defaultCenter];
 }
 
@@ -70,8 +72,9 @@ static NSNotificationCenter *nc = nil;
 {
   if ((self = [super initWithFrame: frameRect]) != nil)
     {
+      _dividerStyle = NSSplitViewDividerStyleThick; // Cocoa default...
       _dividerWidth = [self dividerThickness];
-      _draggedBarWidth = 8; // default bigger than dividerThickness
+      _draggedBarWidth = [self dividerThickness] + 2;
       _isVertical = NO;
       ASSIGN(_dividerColor, [NSColor controlShadowColor]);
       ASSIGN(_dimpleImage, [NSImage imageNamed: @"common_Dimple"]); 
@@ -402,8 +405,9 @@ static NSNotificationCenter *nc = nil;
 - (void) mouseDown: (NSEvent*)theEvent
 {
   NSApplication *app = [NSApplication sharedApplication];
-  NSPoint p = NSZeroPoint, 
-    op = NSZeroPoint;
+  NSPoint p = NSZeroPoint;
+  NSPoint op = NSZeroPoint;
+  NSPoint poffset = NSZeroPoint;  
   NSEvent *e;
   NSRect r, r1, bigRect, vis;
   id v = nil, prev = nil;
@@ -453,7 +457,23 @@ static NSNotificationCenter *nc = nil;
         {
           NSDebugLLog(@"NSSplitView",
             @"NSSplitView got mouseDown in subview area");
-          return;
+          
+          // If this is the first view then we're done...
+          if (i == 0)
+            return;
+          
+          // Otherwise, check whether the delegate wants a larger rectangle
+          // for the divider grab area that may overlap the view and validate
+          // the point within that area...
+          r = [self _dividerRectForIndex: i-1];
+          if (NSPointInRect(p, r) == NO)
+            return;
+          
+          // Capture the offset for use during the resize loop below...
+          poffset = NSMakePoint(r.origin.x-p.x, r.origin.y-p.y);
+          
+          // Force the view processing below to select this view...
+          p = r.origin;         
         }
       if (_isVertical == NO)
         {
@@ -738,7 +758,8 @@ static NSNotificationCenter *nc = nil;
       if ((_isVertical == YES && p.x != op.x)
         || (_isVertical == NO && p.y != op.y))
         {
-          [self _resize: v withOldSplitView: prev withFrame: r fromPoint: p 
+          NSPoint point = NSMakePoint(p.x+poffset.x, p.y+poffset.y);
+          [self _resize: v withOldSplitView: prev withFrame: r fromPoint: point
             withBigRect: bigRect divHorizontal: divHorizontal
             divVertical: divVertical];
           [_window invalidateCursorRectsForView: self];
@@ -972,14 +993,22 @@ static NSNotificationCenter *nc = nil;
     }
 }
 
-- (CGFloat) dividerThickness 
+- (CGFloat) dividerThickness
 {
   /*
    * You need to override this method in subclasses to change the
    * dividerThickness (or, without need for subclassing, invoke
    * setDimpleImage:resetDividerThickness:YES below)
    */
-  return 6;
+  if (_dividerStyle == NSSplitViewDividerStyleThin)
+    return 1;
+  if (_dividerStyle == NSSplitViewDividerStyleThick)
+    return 6;
+  if (_dividerStyle == NSSplitViewDividerStylePaneSplitter)
+    return 6;
+
+  NSWarnMLog(@"unsupported divider style: %ld", (long)_dividerStyle);
+  return 0;
 }
 
 static inline NSPoint centerSizeInRect(NSSize innerSize, NSRect outerRect)
@@ -990,7 +1019,7 @@ static inline NSPoint centerSizeInRect(NSSize innerSize, NSRect outerRect)
   return p;
 }
 
-- (void) drawDividerInRect: (NSRect)aRect
+- (void) drawThickDividerInRect: (NSRect)aRect
 {
   NSPoint dimpleOrigin;
   NSSize dimpleSize;
@@ -1014,6 +1043,61 @@ static inline NSPoint centerSizeInRect(NSSize innerSize, NSRect outerRect)
     }
   [_dimpleImage compositeToPoint: dimpleOrigin 
                 operation: NSCompositeSourceOver];
+}
+
+- (void) drawThinDividerInRect: (NSRect) aRect
+{
+  CGFloat lineWidth  = (_isVertical ? aRect.size.width : aRect.size.height);
+  NSPoint startPoint = aRect.origin;
+  NSPoint endPoint   = NSMakePoint(NSMaxX(aRect), NSMinY(aRect));
+  NSBezierPath *path = [NSBezierPath bezierPath];
+
+  if (_isVertical)
+  {
+    endPoint = NSMakePoint(NSMinX(aRect), NSMaxY(aRect));
+  }
+
+  [path setLineWidth: lineWidth];
+  [path moveToPoint: startPoint];
+  [path lineToPoint: endPoint];
+  [path closePath];
+  [path stroke];
+}
+
+- (void) drawDividerInRect: (NSRect)aRect
+{
+  if (_dividerStyle == NSSplitViewDividerStyleThick)
+    [self drawThickDividerInRect: aRect];
+  else if (_dividerStyle == NSSplitViewDividerStyleThin)
+    [self drawThinDividerInRect: aRect];
+  else if (_dividerStyle == NSSplitViewDividerStylePaneSplitter)
+    [self drawThickDividerInRect: aRect];
+}
+
+- (NSRect) _dividerRectForIndex: (NSUInteger)index
+{
+  const SEL selector = @selector(splitView:effectiveRect:forDrawnRect:ofDividerAtIndex:);
+  NSRect rect = [[[self subviews] objectAtIndex: index] frame];
+  {
+    if (_isVertical == NO)
+      {
+        rect.origin.y = NSMaxY (rect);
+        rect.size.height = _dividerWidth;
+      }
+    else
+      {
+        rect.origin.x = NSMaxX (rect);
+        rect.size.width = _dividerWidth;
+      }
+    rect = NSIntersectionRect(rect, [self visibleRect]);
+
+    // TESTPLANT-MAL-08242017: Check with delegate for hit rect...
+    if (_delegate && [_delegate respondsToSelector: selector])
+      {
+        rect = [_delegate splitView: self effectiveRect: rect forDrawnRect: rect ofDividerAtIndex: index];
+      }
+  }
+  return rect;
 }
 
 /* Vertical splitview has a vertical split bar */
@@ -1315,20 +1399,7 @@ static inline NSPoint centerSizeInRect(NSSize innerSize, NSRect outerRect)
 
   for (i = 0; (i + 1) < count; i++)
     {
-      NSView *v = [subs objectAtIndex: i];
-      NSRect divRect = [v frame];
-      if (_isVertical == NO)
-        {
-          divRect.origin.y = NSMaxY (divRect);
-          divRect.size.height = _dividerWidth;
-        }
-      else
-        {
-          divRect.origin.x = NSMaxX (divRect);
-          divRect.size.width = _dividerWidth;
-        }
-      divRect = NSIntersectionRect(divRect, visibleRect);
-
+      NSRect divRect = [self _dividerRectForIndex: i];
       if (!NSEqualRects(NSZeroRect, divRect))
 	{
 	  [self addCursorRect: divRect cursor: cursor];
@@ -1343,13 +1414,12 @@ static inline NSPoint centerSizeInRect(NSSize innerSize, NSRect outerRect)
 
 - (NSSplitViewDividerStyle) dividerStyle
 {
-  // FIXME
-  return NSSplitViewDividerStyleThick;
+  return _dividerStyle;
 }
 
 - (void) setDividerStyle: (NSSplitViewDividerStyle)dividerStyle
 {
-  // FIXME
+  _dividerStyle = dividerStyle;
 }
 
 /*
@@ -1363,6 +1433,7 @@ static inline NSPoint centerSizeInRect(NSSize innerSize, NSRect outerRect)
     {
       [aCoder encodeBool: _isVertical forKey: @"NSIsVertical"];
       [aCoder encodeObject: _autosaveName forKey: @"NSAutosaveName"];
+      [aCoder encodeInteger: _dividerStyle forKey: @"NSDividerStyle"];
     }
   else
     {
@@ -1397,6 +1468,10 @@ static inline NSPoint centerSizeInRect(NSSize innerSize, NSRect outerRect)
       return nil;
     }
 
+  // Defaults
+  _dividerStyle = NSSplitViewDividerStyleThick; // Cocoa default...
+  
+
   if ([aDecoder allowsKeyedCoding])
     {
       id subview = nil;
@@ -1411,9 +1486,14 @@ static inline NSPoint centerSizeInRect(NSSize innerSize, NSRect outerRect)
         {
           [self setAutosaveName: [aDecoder decodeObjectForKey: @"NSAutosaveName"]];
         }
+      
+      if ([aDecoder containsValueForKey: @"NSDividerStyle"])
+        {
+          [self setDividerStyle: [aDecoder decodeIntegerForKey: @"NSDividerStyle"]];
+        }
 
       _dividerWidth = [self dividerThickness];
-      _draggedBarWidth = 8; // default bigger than dividerThickness
+      _draggedBarWidth = _dividerWidth + 2; // default bigger than dividerThickness
       ASSIGN(_dividerColor, [NSColor controlShadowColor]);
       ASSIGN(_dimpleImage, [NSImage imageNamed: @"common_Dimple"]); 
       _never_displayed_before = YES;
@@ -1427,6 +1507,8 @@ static inline NSPoint centerSizeInRect(NSSize innerSize, NSRect outerRect)
     }
   else
     {
+      int version = [aDecoder versionForClassName: @"NSSplitView"];
+      
       // FIXME: No idea why this as encode as int
       int draggedBarWidth;
 
@@ -1445,13 +1527,73 @@ static inline NSPoint centerSizeInRect(NSSize innerSize, NSRect outerRect)
       [aDecoder decodeValueOfObjCType: @encode(int) at: &draggedBarWidth];
       _draggedBarWidth = draggedBarWidth;
       [aDecoder decodeValueOfObjCType: @encode(BOOL) at: &_isVertical];
-
-      _dividerWidth = [self dividerThickness];
       _never_displayed_before = YES;
+
+      // If we are using a later version..
+      if (version > 0)
+        {
+          [aDecoder decodeValueOfObjCType: @encode(int)  at: &_dividerStyle];
+        }
+      
+      _dividerWidth = [self dividerThickness];
+      _draggedBarWidth = _dividerWidth + 2; // default bigger than dividerThickness
     }
 
   return self;
 }
+
+#pragma mark - Arrange subviews support starting in OS X 10.11...
+// TESTPLANT-MAL-08162017: Added...needs to be worked in similar to
+// NSStackView processing for arranged subviews and seems to be based
+// on auto layout constraints...
+- (NSArray*) arrangedSubviews
+{
+  // TESTPLANT-MAL-08162017-FIXME:
+  // needs to be an attribute that holds the arranged subviews...
+  return [self subviews];
+}
+
+- (BOOL) arrangesAllSubviews
+{
+  return _arrangesAllSubviews;
+}
+
+- (void) setArrangesAllSubviews: (BOOL) flag
+{
+  // TESTPLANT-MAL-08162017-FIXME: in cases we need to do the arrangement
+  // processing...
+  _arrangesAllSubviews = flag;
+}
+
+- (void) addArrangedSubview:(NSView *)view
+{
+  // TESTPLANT-MAL-08162017-FIXME:
+  // needs to be added to the internal attribute that holds the arranged subviews...
+  //[_arrangedSubviews addObject: view];
+}
+
+- (void)insertArrangedSubview:(NSView *)view atIndex:(NSInteger)index
+{
+  // TESTPLANT-MAL-08162017-FIXME:
+  // needs to be removed to the internal attribute that holds the arranged subviews...
+  if ((index < 0) || (index >= [_arrangedSubviews count]))
+    {
+      // FIXME: Log and/or exception???
+    }
+  else
+    {
+      //[_arrangedSubviews insertObject: view atIndex: index];
+    }
+}
+
+- (void) removeArrangedSubview:(NSView *)view
+{
+  // TESTPLANT-MAL-08162017-FIXME:
+  // needs to be removed to the internal attribute that holds the arranged subviews...
+  //[_arrangedSubviews removeObject: view];
+}
+
+// TESTPLANT-MAL-08162017: END ADDED SECTION
 
 @end
 

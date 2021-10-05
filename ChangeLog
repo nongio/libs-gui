@@ -1,3 +1,41 @@
+2021-10-05 Gregory John Casamento <greg.casamento@gmail.com>
+
+	* Headers/Additions/GNUstepGUI/GSTheme.h
+	* Headers/AppKit/NSNibLoading.h
+	* Headers/AppKit/NSSplitView.h
+	* Headers/AppKit/NSTabView.h
+	* Headers/AppKit/NSToolbar.h
+	* Images/GNUmakefile
+	* Source/GSAutocompleteWindow.m
+	* Source/GSLayoutManager.m
+	* Source/GSThemeDrawing.m
+	* Source/GSToolbarView.m
+	* Source/GSToolTips.m
+	* Source/NSBitmapImageRep+JPEG.m
+	* Source/NSBitmapImageRep.m
+	* Source/NSBrowser.m
+	* Source/NSBundleAdditions.m
+	* Source/NSButtonCell.m
+	* Source/NSCollectionView.m
+	* Source/NSComboBoxCell.m
+	* Source/NSGlyphGenerator.m
+	* Source/NSPasteboard.m
+	* Source/NSPopUpButtonCell.m
+	* Source/NSPopUpButton.m
+	* Source/NSScrollView.m
+	* Source/NSSecureTextField.m
+	* Source/NSSpellChecker.m
+	* Source/NSSplitView.m
+	* Source/NSTableView.m
+	* Source/NSTabView.m
+	* Source/NSTextContainer.m
+	* Source/NSTextFieldCell.m
+	* Source/NSTextField.m
+	* Source/NSTextView.m
+	* Source/NSWindowController.m: Manual merge of all relevant
+        keysight/eggplant changes to the code since the divergence of
+        the gnustep_testplant_branch several years back.
+
 2021-10-03 Gregory John Casamento <greg.casamento@gmail.com>
 
 	* Headers/AppKit/NSComboBox.h: Add check to see if @optional

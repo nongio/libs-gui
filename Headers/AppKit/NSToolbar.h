@@ -144,12 +144,24 @@ typedef NSString* NSToolbarItemIdentifier;
 /*
  * Methods Implemented by the Delegate
  */
+#if OS_API_VERSION(MAC_OS_X_VERSION_10_6, GS_API_LATEST)
+@protocol NSToolbarDelegate <NSObject>
+#if GS_PROTOCOLS_HAVE_OPTIONAL
+@optional
+#endif
+#else
 @interface NSObject (NSToolbarDelegate)
+#endif
+// delegate methods
 // notification methods
 - (void) toolbarDidRemoveItem: (NSNotification*)aNotification;
 - (void) toolbarWillAddItem: (NSNotification*)aNotification;
+// optional method
+- (NSArray *) toolbarSelectableItemIdentifiers: (NSToolbar *)toolbar;
 
-// delegate methods
+#if GS_PROTOCOLS_HAVE_OPTIONAL
+@required
+#endif
 // required method
 - (NSToolbarItem*)toolbar: (NSToolbar*)toolbar
     itemForItemIdentifier: (NSString*)itemIdentifier
@@ -158,8 +170,6 @@ willBeInsertedIntoToolbar: (BOOL)flag;
 - (NSArray*) toolbarAllowedItemIdentifiers: (NSToolbar*)toolbar;
 // required method
 - (NSArray*) toolbarDefaultItemIdentifiers: (NSToolbar*)toolbar;
-// optional method
-- (NSArray *) toolbarSelectableItemIdentifiers: (NSToolbar *)toolbar;
 @end
 
 #endif /* _GNUstep_H_NSToolbar */
