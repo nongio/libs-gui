@@ -439,12 +439,10 @@
 {
   NSDebugLLog(@"NSImage", @"Creating bitmap image with pw %d ph %d bps %d spp %d alpha %d, planar %d cs %@",
               (int)width,(int) height, (int)bps, (int)spp, alpha, isPlanar, colorSpaceName);
-  if (!bps || !spp || !width || !height) 
+  if (!bps || !spp || !width || !height)
     {
-      // Per Apple Docs: RETURNS: An initialized NSBitmapImageRep object or nil if the object
-      // cannot be initialized.
-      NSLog(@"%s:invalid parameters: bps: %d spp: %d width: %d height: %d", __PRETTY_FUNCTION__,
-            bps, spp, width, height);
+      // Per Apple documentation, return nil if can't initialize.
+      NSLog(@"Cannot initialize image with bps = %ld, spp = %ld, width = %ld, height = %ld", bps, spp, width, height);
       return nil;
     }
 

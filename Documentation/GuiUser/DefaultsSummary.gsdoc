@@ -287,6 +287,13 @@
           Default "#".
 	  </p>
 	  </desc>
+	  <term>GSDisableSpellCheckerServer</term>
+	  <desc>
+          <p>
+          A boolean that, if set to YES, disables the start of the Spell Checker.
+          Defaults to NO.
+          </p>
+	  </desc>
 	  <term>NSInterfaceStyleDefault</term>
 	  <desc>
           <p>
@@ -400,5 +407,3 @@
     </chapter>
   </body>
 </gsdoc>
-
-

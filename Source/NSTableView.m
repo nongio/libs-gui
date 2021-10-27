@@ -2783,9 +2783,9 @@ byExtendingSelection: (BOOL)flag
     {
       if ([indexes lastIndex] >= _numberOfColumns)
         {
-          // TESTPLANT-MAL-08142017: Cocoa seems to just return in this case...
-          NSDebugLLog(@"NSTableView", @"Column index %d out of table in selectColumn",
-                      [indexes lastIndex]); // GC
+          // Cocoa returns in this case...
+          NSDebugLLog(@"NSTableView", @"Column index %lu out of table in selectColumn",
+                      [indexes lastIndex]);
           return;
 	}
 

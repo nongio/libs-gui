@@ -1,40 +1,47 @@
-2021-10-05 Gregory John Casamento <greg.casamento@gmail.com>
+2021-10-27 Gregory John Casamento <greg.casamento@gmail.com>
 
-	* Headers/Additions/GNUstepGUI/GSTheme.h
-	* Headers/AppKit/NSNibLoading.h
-	* Headers/AppKit/NSSplitView.h
-	* Headers/AppKit/NSTabView.h
-	* Headers/AppKit/NSToolbar.h
-	* Images/GNUmakefile
-	* Source/GSAutocompleteWindow.m
-	* Source/GSLayoutManager.m
-	* Source/GSThemeDrawing.m
-	* Source/GSToolbarView.m
-	* Source/GSToolTips.m
-	* Source/NSBitmapImageRep+JPEG.m
-	* Source/NSBitmapImageRep.m
-	* Source/NSBrowser.m
-	* Source/NSBundleAdditions.m
-	* Source/NSButtonCell.m
-	* Source/NSCollectionView.m
-	* Source/NSComboBoxCell.m
-	* Source/NSGlyphGenerator.m
-	* Source/NSPasteboard.m
-	* Source/NSPopUpButtonCell.m
-	* Source/NSPopUpButton.m
-	* Source/NSScrollView.m
-	* Source/NSSecureTextField.m
-	* Source/NSSpellChecker.m
-	* Source/NSSplitView.m
-	* Source/NSTableView.m
-	* Source/NSTabView.m
-	* Source/NSTextContainer.m
-	* Source/NSTextFieldCell.m
-	* Source/NSTextField.m
-	* Source/NSTextView.m
-	* Source/NSWindowController.m: Manual merge of all relevant
-        keysight/eggplant changes to the code since the divergence of
-        the gnustep_testplant_branch several years back.
+	* Source/GSToolTips.m: Add extra pixels so that tool tip doesn't
+        overrun the window.
+
+2021-10-25 Riccardo Mottola <rm@gnu.org>
+
+	* Source/NSTextStorage.m:
+	Keep local variables to ensure correct values during recursion.
+
+2021-10-21 Gregory John Casamento <greg.casamento@gmail.com>
+
+	* Headers/AppKit/NSGlyphInfo.[hm]: Class which provides info about
+	each glyph depending on mappings.  Currently only identity mapping
+	is supported.
+
+2021-10-13 Gregory John Casamento <greg.casamento@gmail.com>
+
+	* Headers/AppKit/NSToolbar.h: Update to use formal protocol if
+        API level is 10.6+.
+
+2021-10-13 Gregory John Casamento <greg.casamento@gmail.com>
+
+	* Headers/AppKit/NSTabView.h: Update NSTabView.h to have a formal
+        protocol for NSTabViewDelegate if the API we are using is 10.6 or
+        later.
+
+2021-10-13 Gregory John Casamento <greg.casamento@gmail.com>
+
+	* Source/NSTableView.m: Remove exception where lastIndex is greater
+        than number of columns.
+
+2021-10-13 Gregory John Casamento <greg.casamento@gmail.com>
+
+	* Headers/Additions/GNUstepGUI/GSTheme.h: Add tabview enum
+	* Source/GSAutocompleteWindow.h: Fix signature mismatch
+	* Source/GSThemeDrawing.m: Move tabview enum to header.
+
+2021-10-12 Gregory John Casamento <greg.casamento@gmail.com>
+
+	* Source/NSBitmapImageRep.m: Change initWithBitmapDataPlanes:...
+        to conform to Apple documented behavior and return nil if it
+        cannot initialize with the given arguments.
+>>>>>>> master
 
 2021-10-03 Gregory John Casamento <greg.casamento@gmail.com>
 

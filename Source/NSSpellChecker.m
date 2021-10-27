@@ -59,6 +59,7 @@
 #import "AppKit/NSTextField.h"
 #import "AppKit/NSWindow.h"
 #import "GSGuiPrivate.h"
+#import "GNUstepBase/NSDebug+GNUstepBase.h"
 #import "GNUstepGUI/GSServicesManager.h"
 
 // prototype for function to create name for server
@@ -105,6 +106,12 @@ extern NSString *GSSpellServerName(NSString *checkerDictionary, NSString *langua
 @implementation GSServicesManager(NSSpellCheckerMethods)
 - (id)_launchSpellCheckerForLanguage: (NSString *)language
 {
+  if ([[NSUserDefaults standardUserDefaults] boolForKey: @"GSDisableSpellCheckerServer"])
+    {
+      GSOnceMLog(@"WARNING: spell checker disabled - reset 'GSDisableSpellCheckerServer' to NO in defaults to re-enable");
+      return nil;
+    }
+
   id<NSSpellServerPrivateProtocol> proxy = nil;
 
   if ([[NSUserDefaults standardUserDefaults] boolForKey: @"GSDisableSpellCheckerServer"])
@@ -139,7 +146,7 @@ extern NSString *GSSpellServerName(NSString *checkerDictionary, NSString *langua
                                 @protocol(NSSpellServerPrivateProtocol)];
         }
     }
-			  
+
   return proxy;
 }
 

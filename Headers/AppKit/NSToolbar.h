@@ -152,7 +152,6 @@ typedef NSString* NSToolbarItemIdentifier;
 #else
 @interface NSObject (NSToolbarDelegate)
 #endif
-// delegate methods
 // notification methods
 - (void) toolbarDidRemoveItem: (NSNotification*)aNotification;
 - (void) toolbarWillAddItem: (NSNotification*)aNotification;
