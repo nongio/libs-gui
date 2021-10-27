@@ -41,7 +41,6 @@
 	* Source/NSBitmapImageRep.m: Change initWithBitmapDataPlanes:...
         to conform to Apple documented behavior and return nil if it
         cannot initialize with the given arguments.
->>>>>>> master
 
 2021-10-03 Gregory John Casamento <greg.casamento@gmail.com>
 
