@@ -155,12 +155,14 @@ typedef NSString* NSToolbarItemIdentifier;
 // notification methods
 - (void) toolbarDidRemoveItem: (NSNotification*)aNotification;
 - (void) toolbarWillAddItem: (NSNotification*)aNotification;
+
 // optional method
 - (NSArray *) toolbarSelectableItemIdentifiers: (NSToolbar *)toolbar;
 
 #if GS_PROTOCOLS_HAVE_OPTIONAL
 @required
 #endif
+// delegate methods
 // required method
 - (NSToolbarItem*)toolbar: (NSToolbar*)toolbar
     itemForItemIdentifier: (NSString*)itemIdentifier
